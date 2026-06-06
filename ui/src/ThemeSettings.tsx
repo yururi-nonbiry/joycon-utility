@@ -8,7 +8,7 @@ const ThemeSettings = () => {
   const { theme, setTheme } = useTheme();
 
   const handleThemeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setTheme(event.target.value);
+    setTheme(event.target.value as 'light' | 'dark');
   };
 
   return (

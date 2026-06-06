@@ -3,6 +3,7 @@ import React, { createContext, useState, useMemo, useContext, useEffect } from '
 // Define the shape of the context
 interface ThemeContextType {
   theme: 'light' | 'dark';
+  setTheme: (theme: 'light' | 'dark') => void;
   toggleTheme: () => void;
 }
 
@@ -23,7 +24,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Memoize the context value to prevent unnecessary re-renders
-  const value = useMemo(() => ({ theme, toggleTheme }), [theme]);
+  const value = useMemo(() => ({ theme, setTheme, toggleTheme }), [theme]);
 
   return (
     <ThemeContext.Provider value={value}>
