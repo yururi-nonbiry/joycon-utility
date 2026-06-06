@@ -5,7 +5,7 @@ const robot = require('robotjs');
 
 let tray = null;
 let win = null;
-let pythonProcess = null;
+let backendProcess = null;
 let currentVolume = 0.5; // Initial assumed volume
 let windowWatcherInterval = null;
 
@@ -29,32 +29,39 @@ async function startWindowWatcher() {
     }, 1000);
 }
 
-// Function to start the Python server
-function startPythonServer() {
-    let pythonExecutable, pythonScript;
+// Function to start the Rust backend server
+function startBackendServer() {
+    let backendExecutable;
+    const fs = require('fs');
 
     if (app.isPackaged) {
-        // In production, the python executable and script are in the resources path
-        pythonExecutable = path.join(process.resourcesPath, 'venv', 'Scripts', 'python.exe');
-        pythonScript = path.join(process.resourcesPath, 'main.py');
+        // In production, the backend executable is in the resources path
+        backendExecutable = path.join(process.resourcesPath, 'joycon-backend.exe');
     } else {
-        // In development, use relative paths
-        pythonExecutable = path.join(__dirname, '../../venv/Scripts/python.exe');
-        pythonScript = path.join(__dirname, '../../main.py');
+        // In development, search in release or debug target folder
+        const releasePath = path.join(__dirname, '../../backend/target/release/joycon-backend.exe');
+        const debugPath = path.join(__dirname, '../../backend/target/debug/joycon-backend.exe');
+        
+        if (fs.existsSync(releasePath)) {
+            backendExecutable = releasePath;
+        } else {
+            backendExecutable = debugPath;
+        }
     }
 
-    pythonProcess = spawn(pythonExecutable, [pythonScript]);
+    console.log(`Spawning backend: ${backendExecutable}`);
+    backendProcess = spawn(backendExecutable);
 
-    pythonProcess.stdout.on('data', (data) => {
-        console.log(`Python stdout: ${data}`);
+    backendProcess.stdout.on('data', (data) => {
+        console.log(`Backend stdout: ${data}`);
     });
 
-    pythonProcess.stderr.on('data', (data) => {
-        console.error(`Python stderr: ${data}`);
+    backendProcess.stderr.on('data', (data) => {
+        console.error(`Backend stderr: ${data}`);
     });
 
-    pythonProcess.on('close', (code) => {
-        console.log(`Python process exited with code ${code}`);
+    backendProcess.on('close', (code) => {
+        console.log(`Backend process exited with code ${code}`);
     });
 }
 
@@ -122,7 +129,7 @@ function createTray() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 app.whenReady().then(() => {
-    startPythonServer();
+    startBackendServer();
     createWindow();
     createTray();
     startWindowWatcher();
@@ -177,11 +184,11 @@ app.on('activate', () => {
     }
 });
 
-// Kill the python process before the app quits
+// Kill the backend process before the app quits
 app.on('will-quit', () => {
-    if (pythonProcess) {
-        pythonProcess.kill();
-        pythonProcess = null;
+    if (backendProcess) {
+        backendProcess.kill();
+        backendProcess = null;
     }
     if (windowWatcherInterval) {
         clearInterval(windowWatcherInterval);

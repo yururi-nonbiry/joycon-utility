@@ -54,16 +54,8 @@
     ],
     "extraResources": [
       {
-        "from": "../venv",
-        "to": "venv"
-      },
-      {
-        "from": "../main.py",
-        "to": "main.py"
-      },
-      {
-        "from": "../requirements.txt",
-        "to": "requirements.txt"
+        "from": "../backend/target/release/joycon-backend.exe",
+        "to": "joycon-backend.exe"
       }
     ],
     "win": {

@@ -1,0 +1,16 @@
+[package]
+name = "joycon-backend"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = "0.21"
+futures-util = "0.3"
+hidapi = "2.6"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+windows-sys = { version = "0.52", features = [
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_Foundation",
+] }
