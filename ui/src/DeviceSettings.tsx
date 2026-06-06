@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useDeviceSettings, type Profile } from './contexts/DeviceSettingsContext';
+import { useDeviceSettings } from './contexts/DeviceSettingsContext';
 import './DeviceSettings.css';
 import { socket } from './socket';
 
@@ -12,7 +12,6 @@ const DeviceSettings = () => {
     setActiveProfileId, 
     addProfile,
     deleteProfile,
-    updateProfile,
     getActiveProfilePages,
     updatePageSetting
   } = useDeviceSettings();

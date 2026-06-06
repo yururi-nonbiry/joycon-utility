@@ -13,7 +13,7 @@ const MainContent: React.FC = () => {
   const [devices, setDevices] = useState({});
   const [joycons, setJoycons] = useState<JoyConDevice[]>([]); // Joy-Con用のstate
   const { getActiveProfilePages, findProfileByAppName } = useDeviceSettings();
-  const [activeAppName, setActiveAppName] = useState('');
+  const [activeTab, setActiveTab] = useState('theme');
 
   useEffect(() => {
     // 従来のデバイスアップデート
@@ -43,7 +43,6 @@ const MainContent: React.FC = () => {
     });
 
     window.electron.onActiveWindowChange((appName: string) => {
-      setActiveAppName(appName);
       const profile = findProfileByAppName(appName);
       if (profile) {
         // TODO: Set active profile based on appName
@@ -65,11 +64,11 @@ const MainContent: React.FC = () => {
       <div className="main-content">
         <div className="grid-container">
           <h3>{t('deviceGrid')}</h3>
-          {/* DeviceGridにjoyconsを渡す */}
-          <DeviceGrid devices={devices} joycons={joycons} deviceSettings={deviceSettings} />
+          {/* DeviceGridにjoyconsとsetActiveTabを渡す */}
+          <DeviceGrid devices={devices} joycons={joycons} deviceSettings={deviceSettings} setActiveTab={setActiveTab} />
         </div>
         <div className="settings-panel">
-          <Settings />
+          <Settings joycons={joycons} activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>
       </div>
     </main>

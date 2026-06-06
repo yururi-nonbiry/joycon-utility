@@ -17,6 +17,7 @@ interface DeviceGridProps {
   devices: { [key: string]: DeviceData };
   joycons: JoyConDevice[]; // joycons prop
   deviceSettings: PageSettings;
+  setActiveTab: (tab: string) => void;
 }
 
 const DeviceCard: React.FC<{ device: DeviceData; alias?: string }> = ({ device, alias }) => {
@@ -55,7 +56,7 @@ const DeviceCard: React.FC<{ device: DeviceData; alias?: string }> = ({ device, 
   );
 };
 
-const DeviceGrid: React.FC<DeviceGridProps> = ({ devices, joycons, deviceSettings }) => {
+const DeviceGrid: React.FC<DeviceGridProps> = ({ devices, joycons, deviceSettings, setActiveTab }) => {
   const visibleDeviceKeys = Object.keys(devices)
     .filter(key => (deviceSettings[key] ? deviceSettings[key].isVisible : true))
     .sort((a, b) => {
@@ -73,7 +74,7 @@ const DeviceGrid: React.FC<DeviceGridProps> = ({ devices, joycons, deviceSetting
         return <DeviceCard key={key} device={device} alias={alias} />;
       })}
       {/* Joy-Conの統合カード表示 (常に表示) */}
-      <UnifiedJoyConCard allJoyCons={joycons} />
+      <UnifiedJoyConCard allJoyCons={joycons} setActiveTab={setActiveTab} />
     </div>
   );
 };
