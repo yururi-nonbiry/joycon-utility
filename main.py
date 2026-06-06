@@ -124,7 +124,12 @@ async def connect(sid, environ):
 @sio.on('load_joycon_mapping')
 async def load_joycon_mapping(sid, data):
     device_id = data.get('deviceId')
-    await sio.emit('joycon_mapping_loaded', {'deviceId': device_id, 'mapping': state.joycon_mapping.get(device_id, {})}, to=sid)
+    mapping = state.joycon_mapping.get(device_id)
+    if not mapping and device_id not in ('L', 'R'):
+        dev = next((d for d in state.joycon_devices if d['path'] == device_id), None)
+        if dev:
+            mapping = state.joycon_mapping.get(dev['type'], {})
+    await sio.emit('joycon_mapping_loaded', {'deviceId': device_id, 'mapping': mapping or {}}, to=sid)
 
 @sio.on('save_joycon_mapping')
 async def save_joycon_mapping(sid, data):
@@ -132,6 +137,10 @@ async def save_joycon_mapping(sid, data):
     mapping = data.get('mapping')
     if device_id and mapping is not None:
         state.joycon_mapping[device_id] = mapping
+        if device_id not in ('L', 'R'):
+            dev = next((d for d in state.joycon_devices if d['path'] == device_id), None)
+            if dev:
+                state.joycon_mapping[dev['type']] = mapping
         save_mapping()
         await sio.emit('joycon_mapping_saved', {'status': 'success'}, to=sid)
 
@@ -268,7 +277,9 @@ async def scan_and_manage_joycons():
                     released = {name for name in last_state if name not in current_buttons}
                     dev_info['last_button_state'] = current_buttons
 
-                    device_mapping = state.joycon_mapping.get(dev_info['path'], {})
+                    device_mapping = state.joycon_mapping.get(dev_info['path'])
+                    if not device_mapping:
+                        device_mapping = state.joycon_mapping.get(dev_info['type'], {})
                     
                     # --- キーマッピング実行 ---
                     for button in pressed:

@@ -42,16 +42,12 @@ const UnifiedJoyConCard: React.FC<UnifiedJoyConCardProps> = ({ allJoyCons }) => 
             className="joycon-diagram-container-unified"
             style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: '40px', width: '100%' }}
           >
-            {joyConL ? (
-              <JoyConDiagram type="L" pressedButtons={joyConL.buttons || {}} />
-            ) : (
-              <div className="joycon-placeholder l" />
-            )}
-            {joyConR ? (
-              <JoyConDiagram type="R" pressedButtons={joyConR.buttons || {}} />
-            ) : (
-              <div className="joycon-placeholder r" />
-            )}
+            <div className={`joycon-wrapper ${joyConL ? 'connected' : 'disconnected'}`}>
+              <JoyConDiagram type="L" pressedButtons={joyConL?.buttons || {}} />
+            </div>
+            <div className={`joycon-wrapper ${joyConR ? 'connected' : 'disconnected'}`}>
+              <JoyConDiagram type="R" pressedButtons={joyConR?.buttons || {}} />
+            </div>
           </div>
           <div className="joycon-status-group">
                 <div className={`joycon-status-item ${joyConL ? 'connected' : ''}`}>

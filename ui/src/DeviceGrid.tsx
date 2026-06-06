@@ -19,7 +19,7 @@ interface DeviceGridProps {
   deviceSettings: PageSettings;
 }
 
-const DeviceCard: React.FC<{ device: DeviceData; deviceKey: string; alias?: string }> = ({ device, deviceKey, alias }) => {
+const DeviceCard: React.FC<{ device: DeviceData; alias?: string }> = ({ device, alias }) => {
   const { t } = useTranslation();
 
   const renderValue = () => {
@@ -56,8 +56,6 @@ const DeviceCard: React.FC<{ device: DeviceData; deviceKey: string; alias?: stri
 };
 
 const DeviceGrid: React.FC<DeviceGridProps> = ({ devices, joycons, deviceSettings }) => {
-  const { t } = useTranslation();
-
   const visibleDeviceKeys = Object.keys(devices)
     .filter(key => (deviceSettings[key] ? deviceSettings[key].isVisible : true))
     .sort((a, b) => {
@@ -66,23 +64,16 @@ const DeviceGrid: React.FC<DeviceGridProps> = ({ devices, joycons, deviceSetting
       return devA.device_id - devB.device_id || devA.port_id - devB.port_id;
     });
 
-  const hasVisibleDevices = visibleDeviceKeys.length > 0;
-  const hasJoyCons = joycons.length > 0;
-
-  if (!hasVisibleDevices && !hasJoyCons) {
-    return <p>{t('waitingForData')}</p>;
-  }
-
   return (
     <div className="device-grid">
       {/* 既存のデバイスの表示 */}
       {visibleDeviceKeys.map(key => {
         const device = devices[key];
         const alias = deviceSettings[key]?.alias;
-        return <DeviceCard key={key} device={device} deviceKey={key} alias={alias} />;
+        return <DeviceCard key={key} device={device} alias={alias} />;
       })}
-      {/* Joy-Conの統合カード表示 */}
-      {hasJoyCons && <UnifiedJoyConCard allJoyCons={joycons} />}
+      {/* Joy-Conの統合カード表示 (常に表示) */}
+      <UnifiedJoyConCard allJoyCons={joycons} />
     </div>
   );
 };
