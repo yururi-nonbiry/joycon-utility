@@ -69,7 +69,7 @@ function createWindow() {
     win = new BrowserWindow({
         width: 800,
         height: 600,
-        show: true, // Hide the window initially
+        show: false, // Hide the window initially
         webPreferences: {
             preload: path.join(__dirname, 'preload.cjs'),
             contextIsolation: true,
@@ -104,13 +104,16 @@ function createWindow() {
 }
 
 function createTray() {
-    const iconPath = path.join(__dirname, 'vite.svg'); // Path to your icon
+    const iconPath = path.join(__dirname, 'icon.png'); // Path to your icon
     tray = new Tray(iconPath);
     const contextMenu = Menu.buildFromTemplate([
         {
             label: '設定',
             click: () => {
-                win.show();
+                if (win) {
+                    win.show();
+                    win.focus();
+                }
             },
         },
         {
@@ -123,6 +126,26 @@ function createTray() {
     ]);
     tray.setToolTip('Joy-Con PC Utility');
     tray.setContextMenu(contextMenu);
+
+    // Single click to toggle window visibility
+    tray.on('click', () => {
+        if (win) {
+            if (win.isVisible()) {
+                win.hide();
+            } else {
+                win.show();
+                win.focus();
+            }
+        }
+    });
+
+    // Double click to ensure window is shown and focused
+    tray.on('double-click', () => {
+        if (win) {
+            win.show();
+            win.focus();
+        }
+    });
 }
 
 // This method will be called when Electron has finished
