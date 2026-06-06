@@ -1,7 +1,6 @@
 const { app, BrowserWindow, Tray, Menu, ipcMain } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
-const robot = require('robotjs');
 
 let tray = null;
 let win = null;
@@ -138,13 +137,16 @@ app.whenReady().then(() => {
         try {
             console.log(`Received shortcut to execute: ${shortcut}`);
             const keys = shortcut.toLowerCase().split('+').map(k => k.trim());
-            const mainKey = keys.pop();
-            const modifiers = keys;
-            
-            if (mainKey) {
-                robot.keyTap(mainKey, modifiers);
-                console.log(`Executed: keyTap("${mainKey}", [${modifiers.join(', ')}])`);
-            }
+            let psKeys = "";
+            keys.forEach(k => {
+                if (k === 'ctrl' || k === 'control') psKeys += "^";
+                else if (k === 'alt') psKeys += "%";
+                else if (k === 'shift') psKeys += "+";
+                else psKeys += k;
+            });
+            const { exec } = require('child_process');
+            exec(`powershell -Command "[void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.SendKeys]::SendWait('${psKeys}')"`);
+            console.log(`Executed shortcut via PowerShell SendKeys: ${psKeys}`);
         } catch (e) {
             console.error("Failed to execute shortcut:", e);
         }
@@ -152,15 +154,18 @@ app.whenReady().then(() => {
 
     ipcMain.on('set-volume', (event, volume) => {
         try {
-            // A simple approach: tap up or down based on change.
-            // A more robust solution would involve getting actual system volume.
-            const volumeThreshold = 0.05; // Only change if difference is significant
+            const volumeThreshold = 0.05;
+            let action = null;
             if (volume > currentVolume + volumeThreshold) {
-                robot.keyTap('audio_vol_up');
+                action = "[System.Windows.Forms.SendKeys]::SendWait([char]175)"; // Volume Up
                 console.log('Volume up');
             } else if (volume < currentVolume - volumeThreshold) {
-                robot.keyTap('audio_vol_down');
+                action = "[System.Windows.Forms.SendKeys]::SendWait([char]174)"; // Volume Down
                 console.log('Volume down');
+            }
+            if (action) {
+                const { exec } = require('child_process');
+                exec(`powershell -Command "[void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); ${action}"`);
             }
             currentVolume = volume;
         } catch (e) {

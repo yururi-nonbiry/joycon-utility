@@ -16,7 +16,7 @@ use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
 fn simulate_key_down(vk: u16) {
     unsafe {
         let mut input: INPUT = std::mem::zeroed();
-        input.type_ = INPUT_KEYBOARD;
+        input.r#type = INPUT_KEYBOARD;
         input.Anonymous.ki = KEYBDINPUT {
             wVk: vk,
             wScan: 0,
@@ -31,7 +31,7 @@ fn simulate_key_down(vk: u16) {
 fn simulate_key_up(vk: u16) {
     unsafe {
         let mut input: INPUT = std::mem::zeroed();
-        input.type_ = INPUT_KEYBOARD;
+        input.r#type = INPUT_KEYBOARD;
         input.Anonymous.ki = KEYBDINPUT {
             wVk: vk,
             wScan: 0,
@@ -46,7 +46,7 @@ fn simulate_key_up(vk: u16) {
 fn simulate_mouse_move(dx: i32, dy: i32) {
     unsafe {
         let mut input: INPUT = std::mem::zeroed();
-        input.type_ = INPUT_MOUSE;
+        input.r#type = INPUT_MOUSE;
         input.Anonymous.mi = MOUSEINPUT {
             dx,
             dy,
@@ -709,17 +709,17 @@ async fn handle_connection(stream: TcpStream, state: Arc<SharedState>) {
     });
 
     // Send initial list of connected devices
-    {
+    let initial_devices_msg = {
         let devices = state.connected_devices.read().unwrap();
-        let initial_devices_msg = serde_json::json!({
+        serde_json::json!({
             "event": "joycon_devices",
             "data": {
                 "devices": &*devices
             }
         })
-        .to_string();
-        let _ = tx_to_ws.send(Message::Text(initial_devices_msg)).await;
-    }
+        .to_string()
+    };
+    let _ = tx_to_ws.send(Message::Text(initial_devices_msg)).await;
 
     // Task 3: Read incoming requests from client WebSocket
     while let Some(Ok(msg)) = ws_rx.next().await {
@@ -733,16 +733,18 @@ async fn handle_connection(stream: TcpStream, state: Arc<SharedState>) {
                                 .and_then(|d| d.get("deviceId"))
                                 .and_then(|id| id.as_str())
                             {
-                                let mappings = state.mappings.read().unwrap();
-                                let mapping = mappings.get(device_id).cloned().unwrap_or_default();
-                                let resp = serde_json::json!({
-                                    "event": "joycon_mapping_loaded",
-                                    "data": {
-                                        "deviceId": device_id,
-                                        "mapping": mapping
-                                    }
-                                })
-                                .to_string();
+                                let resp = {
+                                    let mappings = state.mappings.read().unwrap();
+                                    let mapping = mappings.get(device_id).cloned().unwrap_or_default();
+                                    serde_json::json!({
+                                        "event": "joycon_mapping_loaded",
+                                        "data": {
+                                            "deviceId": device_id,
+                                            "mapping": mapping
+                                        }
+                                    })
+                                    .to_string()
+                                };
                                 let _ = tx_to_ws.send(Message::Text(resp)).await;
                             }
                         }
@@ -756,9 +758,11 @@ async fn handle_connection(stream: TcpStream, state: Arc<SharedState>) {
                                         HashMap<String, serde_json::Value>,
                                     >(mapping_val.clone())
                                     {
-                                        let mut mappings = state.mappings.write().unwrap();
-                                        mappings.insert(device_id.to_string(), mapping_map);
-                                        save_mapping(&*mappings);
+                                        {
+                                            let mut mappings = state.mappings.write().unwrap();
+                                            mappings.insert(device_id.to_string(), mapping_map);
+                                            save_mapping(&*mappings);
+                                        }
 
                                         let resp = serde_json::json!({
                                             "event": "joycon_mapping_saved",

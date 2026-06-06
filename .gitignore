@@ -35,3 +35,8 @@ dist*/
 # Compiled builds / Output
 *.exe
 *.dll
+
+# Rust
+target/
+target_build/
+
