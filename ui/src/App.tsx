@@ -64,8 +64,7 @@ const MainContent: React.FC = () => {
       <div className="main-content">
         <div className="grid-container">
           <h3>{t('deviceGrid')}</h3>
-          {/* DeviceGridにjoyconsとsetActiveTabを渡す */}
-          <DeviceGrid devices={devices} joycons={joycons} deviceSettings={deviceSettings} setActiveTab={setActiveTab} />
+          <DeviceGrid devices={devices} deviceSettings={deviceSettings} />
         </div>
         <div className="settings-panel">
           <Settings joycons={joycons} activeTab={activeTab} setActiveTab={setActiveTab} />

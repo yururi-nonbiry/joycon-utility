@@ -11,7 +11,6 @@ interface JoyConSettingsProps {
 
 const JoyConSettings: React.FC<JoyConSettingsProps> = ({ allJoyCons }) => {
   const [mappings, setMappings] = useState<{ L?: Mapping, R?: Mapping }>({});
-  const [selectedSide, setSelectedSide] = useState<'L' | 'R'>('L');
   const [isStickModalOpen, setStickModalOpen] = useState(false);
   const [editingStick, setEditingStick] = useState<{ deviceType: 'L' | 'R', stickKey: 'stick_l' | 'stick_r', label: string } | null>(null);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
@@ -80,69 +79,49 @@ const JoyConSettings: React.FC<JoyConSettingsProps> = ({ allJoyCons }) => {
     <div className="joycon-settings-panel">
       <h2>Joy-Con Settings</h2>
 
-      <div className="side-selector" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-        <button 
-          onClick={() => setSelectedSide('L')} 
-          className={`tab-button ${selectedSide === 'L' ? 'active' : ''}`}
-          style={{ flex: 1, padding: '10px', borderRadius: '5px' }}
-        >
-          Left Joy-Con (L) {joyConL ? '🟢' : '⚪'}
-        </button>
-        <button 
-          onClick={() => setSelectedSide('R')} 
-          className={`tab-button ${selectedSide === 'R' ? 'active' : ''}`}
-          style={{ flex: 1, padding: '10px', borderRadius: '5px' }}
-        >
-          Right Joy-Con (R) {joyConR ? '🟢' : '⚪'}
-        </button>
-      </div>
-
-      <div className="single-view-container">
-        {selectedSide === 'L' ? (
-          <div className="joycon-view">
-            <div className="joycon-view-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <span style={{ fontWeight: 'bold' }}>Joy-Con (L)</span>
-              <span className={`status-badge ${joyConL ? 'connected' : 'disconnected'}`} style={{
-                fontSize: '0.8em',
-                padding: '3px 8px',
-                borderRadius: '12px',
-                backgroundColor: joyConL ? '#28a745' : '#6c757d',
-                color: 'white'
-              }}>
-                {joyConL ? 'Connected' : 'Disconnected'}
-              </span>
-            </div>
-            <ButtonMapping
-              deviceType="L"
-              initialMapping={mappings.L || {}}
-              onMappingChange={(newMap) => handleMappingChange('L', newMap)}
-              pressedButtons={joyConL?.buttons || {}}
-              onOpenStickSettings={(stickKey) => handleOpenStickSettings('L', stickKey as 'stick_l' | 'stick_r')}
-            />
+      <div className="dual-view-container">
+        <div className="joycon-view">
+          <div className="joycon-view-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <span style={{ fontWeight: 'bold' }}>Joy-Con (L)</span>
+            <span className={`status-badge ${joyConL ? 'connected' : 'disconnected'}`} style={{
+              fontSize: '0.8em',
+              padding: '3px 8px',
+              borderRadius: '12px',
+              backgroundColor: joyConL ? '#28a745' : '#6c757d',
+              color: 'white'
+            }}>
+              {joyConL ? 'Connected' : 'Disconnected'}
+            </span>
           </div>
-        ) : (
-          <div className="joycon-view">
-            <div className="joycon-view-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <span style={{ fontWeight: 'bold' }}>Joy-Con (R)</span>
-              <span className={`status-badge ${joyConR ? 'connected' : 'disconnected'}`} style={{
-                fontSize: '0.8em',
-                padding: '3px 8px',
-                borderRadius: '12px',
-                backgroundColor: joyConR ? '#28a745' : '#6c757d',
-                color: 'white'
-              }}>
-                {joyConR ? 'Connected' : 'Disconnected'}
-              </span>
-            </div>
-            <ButtonMapping
-              deviceType="R"
-              initialMapping={mappings.R || {}}
-              onMappingChange={(newMap) => handleMappingChange('R', newMap)}
-              pressedButtons={joyConR?.buttons || {}}
-              onOpenStickSettings={(stickKey) => handleOpenStickSettings('R', stickKey as 'stick_l' | 'stick_r')}
-            />
+          <ButtonMapping
+            deviceType="L"
+            initialMapping={mappings.L || {}}
+            onMappingChange={(newMap) => handleMappingChange('L', newMap)}
+            pressedButtons={joyConL?.buttons || {}}
+            onOpenStickSettings={(stickKey) => handleOpenStickSettings('L', stickKey as 'stick_l' | 'stick_r')}
+          />
+        </div>
+        <div className="joycon-view">
+          <div className="joycon-view-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <span style={{ fontWeight: 'bold' }}>Joy-Con (R)</span>
+            <span className={`status-badge ${joyConR ? 'connected' : 'disconnected'}`} style={{
+              fontSize: '0.8em',
+              padding: '3px 8px',
+              borderRadius: '12px',
+              backgroundColor: joyConR ? '#28a745' : '#6c757d',
+              color: 'white'
+            }}>
+              {joyConR ? 'Connected' : 'Disconnected'}
+            </span>
           </div>
-        )}
+          <ButtonMapping
+            deviceType="R"
+            initialMapping={mappings.R || {}}
+            onMappingChange={(newMap) => handleMappingChange('R', newMap)}
+            pressedButtons={joyConR?.buttons || {}}
+            onOpenStickSettings={(stickKey) => handleOpenStickSettings('R', stickKey as 'stick_l' | 'stick_r')}
+          />
+        </div>
       </div>
 
       <div className="settings-actions" style={{ marginTop: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
