@@ -1,26 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import './App.css';
 import { socket } from './socket';
-import DeviceGrid from './DeviceGrid';
 import Settings from './Settings';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { DeviceSettingsProvider, useDeviceSettings } from './contexts/DeviceSettingsContext';
 import type { JoyConDevice } from './types';
 
 const MainContent: React.FC = () => {
-  const { t } = useTranslation();
-  const [devices, setDevices] = useState({});
   const [joycons, setJoycons] = useState<JoyConDevice[]>([]); // Joy-Con用のstate
-  const { getActiveProfilePages, findProfileByAppName } = useDeviceSettings();
+  const { findProfileByAppName } = useDeviceSettings();
   const [activeTab, setActiveTab] = useState('theme');
 
   useEffect(() => {
-    // 従来のデバイスアップデート
-    socket.on('device_update', (data) => {
-      setDevices(prevDevices => ({ ...prevDevices, ...data }));
-    });
-
     // Joy-Conデバイスリストの受信
     socket.on('joycon_devices', (data) => {
       setJoycons(data.devices || []);
@@ -51,24 +42,15 @@ const MainContent: React.FC = () => {
     });
 
     return () => {
-      socket.off('device_update');
       socket.off('joycon_devices');
       socket.off('joycon_update');
     };
   }, [findProfileByAppName]);
 
-  const deviceSettings = getActiveProfilePages()[1] || {}; // Assuming page 1 for now
-
   return (
     <main>
-      <div className="main-content">
-        <div className="grid-container">
-          <h3>{t('deviceGrid')}</h3>
-          <DeviceGrid devices={devices} deviceSettings={deviceSettings} />
-        </div>
-        <div className="settings-panel">
-          <Settings joycons={joycons} activeTab={activeTab} setActiveTab={setActiveTab} />
-        </div>
+      <div className="main-content-full">
+        <Settings joycons={joycons} activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>
     </main>
   );
