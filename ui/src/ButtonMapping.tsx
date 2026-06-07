@@ -14,6 +14,7 @@ interface KeyPaletteProps {
   currentValue: any;
   onSelectValue: (val: any) => void;
   style?: React.CSSProperties;
+  layouts: string[];
 }
 
 // ボタンの内部名と表示名のマッピング
@@ -60,8 +61,8 @@ const stickModes = [
   { value: 'dial', label: 'ダイヤル' },
 ];
 
-const KeyPalette: React.FC<KeyPaletteProps> = ({ currentValue, onSelectValue, style }) => {
-  const [activeTab, setActiveTab] = useState<'normal' | 'mod_tap' | 'tap_dance'>('normal');
+const KeyPalette: React.FC<KeyPaletteProps> = ({ currentValue, onSelectValue, style, layouts }) => {
+  const [activeTab, setActiveTab] = useState<'normal' | 'mod_tap' | 'tap_dance' | 'layer_switch'>('normal');
 
   // Mod-Tap fields
   const [modTapTap, setModTapTap] = useState('');
@@ -74,7 +75,11 @@ const KeyPalette: React.FC<KeyPaletteProps> = ({ currentValue, onSelectValue, st
   const [tapDanceHold, setTapDanceHold] = useState('');
   const [tapDanceActiveField, setTapDanceActiveField] = useState<'single' | 'double' | 'hold'>('single');
 
-  const keyCategories = [
+  // Layer Switch fields
+  const [layerSwitchMode, setLayerSwitchMode] = useState<'toggle' | 'momentary'>('toggle');
+  const [layerSwitchTarget, setLayerSwitchTarget] = useState('Default');
+
+  const keyCategories: { category: string; keys: { label: string; value: any }[] }[] = [
     {
       category: 'よく使うキー',
       keys: [
@@ -116,6 +121,13 @@ const KeyPalette: React.FC<KeyPaletteProps> = ({ currentValue, onSelectValue, st
     {
       category: 'ファンクション',
       keys: Array.from({ length: 12 }, (_, i) => ({ label: `F${i + 1}`, value: `f${i + 1}` }))
+    },
+    {
+      category: 'レイヤー切り替え',
+      keys: (layouts || []).flatMap(layout => [
+        { label: `Toggle: ${layout}`, value: { type: 'layer_switch', switch_mode: 'toggle', target_layout: layout } },
+        { label: `Hold: ${layout}`, value: { type: 'layer_switch', switch_mode: 'momentary', target_layout: layout } }
+      ])
     }
   ];
 
@@ -130,6 +142,10 @@ const KeyPalette: React.FC<KeyPaletteProps> = ({ currentValue, onSelectValue, st
         setTapDanceSingle(currentValue.single_tap || '');
         setTapDanceDouble(currentValue.double_tap || '');
         setTapDanceHold(currentValue.hold || '');
+      } else if (currentValue.type === 'layer_switch') {
+        setActiveTab('layer_switch');
+        setLayerSwitchMode(currentValue.switch_mode || 'toggle');
+        setLayerSwitchTarget(currentValue.target_layout || 'Default');
       }
     } else {
       setActiveTab('normal');
@@ -138,25 +154,29 @@ const KeyPalette: React.FC<KeyPaletteProps> = ({ currentValue, onSelectValue, st
       setTapDanceSingle('');
       setTapDanceDouble('');
       setTapDanceHold('');
+      setLayerSwitchMode('toggle');
+      setLayerSwitchTarget('Default');
     }
   }, [currentValue]);
 
-  const handleKeyGridSelect = (key: string) => {
+  const handleKeyGridSelect = (key: any) => {
     if (activeTab === 'normal') {
       onSelectValue(key);
     } else if (activeTab === 'mod_tap') {
+      const keyStr = typeof key === 'string' ? key : '';
       if (modTapActiveField === 'tap') {
-        setModTapTap(key);
+        setModTapTap(keyStr);
       } else {
-        setModTapHold(key);
+        setModTapHold(keyStr);
       }
     } else if (activeTab === 'tap_dance') {
+      const keyStr = typeof key === 'string' ? key : '';
       if (tapDanceActiveField === 'single') {
-        setTapDanceSingle(key);
+        setTapDanceSingle(keyStr);
       } else if (tapDanceActiveField === 'double') {
-        setTapDanceDouble(key);
+        setTapDanceDouble(keyStr);
       } else {
-        setTapDanceHold(key);
+        setTapDanceHold(keyStr);
       }
     }
   };
@@ -167,18 +187,23 @@ const KeyPalette: React.FC<KeyPaletteProps> = ({ currentValue, onSelectValue, st
         <button 
           onClick={() => setActiveTab('normal')} 
           className={`palette-tab ${activeTab === 'normal' ? 'active' : ''}`}
-          style={{ flex: 1, padding: '6px', fontSize: '0.85em', border: 'none', background: 'none', cursor: 'pointer', borderBottom: activeTab === 'normal' ? '2px solid #007bff' : '2px solid transparent', fontWeight: activeTab === 'normal' ? 'bold' : 'normal', color: 'inherit' }}
+          style={{ flex: 1, padding: '6px 2px', fontSize: '0.78em', border: 'none', background: 'none', cursor: 'pointer', borderBottom: activeTab === 'normal' ? '2px solid #007bff' : '2px solid transparent', fontWeight: activeTab === 'normal' ? 'bold' : 'normal', color: 'inherit' }}
         >通常</button>
         <button 
           onClick={() => setActiveTab('mod_tap')} 
           className={`palette-tab ${activeTab === 'mod_tap' ? 'active' : ''}`}
-          style={{ flex: 1, padding: '6px', fontSize: '0.85em', border: 'none', background: 'none', cursor: 'pointer', borderBottom: activeTab === 'mod_tap' ? '2px solid #007bff' : '2px solid transparent', fontWeight: activeTab === 'mod_tap' ? 'bold' : 'normal', color: 'inherit' }}
+          style={{ flex: 1, padding: '6px 2px', fontSize: '0.78em', border: 'none', background: 'none', cursor: 'pointer', borderBottom: activeTab === 'mod_tap' ? '2px solid #007bff' : '2px solid transparent', fontWeight: activeTab === 'mod_tap' ? 'bold' : 'normal', color: 'inherit' }}
         >Mod-Tap</button>
         <button 
           onClick={() => setActiveTab('tap_dance')} 
           className={`palette-tab ${activeTab === 'tap_dance' ? 'active' : ''}`}
-          style={{ flex: 1, padding: '6px', fontSize: '0.85em', border: 'none', background: 'none', cursor: 'pointer', borderBottom: activeTab === 'tap_dance' ? '2px solid #007bff' : '2px solid transparent', fontWeight: activeTab === 'tap_dance' ? 'bold' : 'normal', color: 'inherit' }}
+          style={{ flex: 1, padding: '6px 2px', fontSize: '0.78em', border: 'none', background: 'none', cursor: 'pointer', borderBottom: activeTab === 'tap_dance' ? '2px solid #007bff' : '2px solid transparent', fontWeight: activeTab === 'tap_dance' ? 'bold' : 'normal', color: 'inherit' }}
         >Tap Dance</button>
+        <button 
+          onClick={() => setActiveTab('layer_switch')} 
+          className={`palette-tab ${activeTab === 'layer_switch' ? 'active' : ''}`}
+          style={{ flex: 1, padding: '6px 2px', fontSize: '0.78em', border: 'none', background: 'none', cursor: 'pointer', borderBottom: activeTab === 'layer_switch' ? '2px solid #007bff' : '2px solid transparent', fontWeight: activeTab === 'layer_switch' ? 'bold' : 'normal', color: 'inherit' }}
+        >レイヤー切替</button>
       </div>
 
       {activeTab === 'mod_tap' && (
@@ -260,6 +285,41 @@ const KeyPalette: React.FC<KeyPaletteProps> = ({ currentValue, onSelectValue, st
         </div>
       )}
 
+      {activeTab === 'layer_switch' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid #ddd' }}>
+          <div>
+            <label style={{ fontSize: '0.8em', fontWeight: 'bold', display: 'block', marginBottom: '3px', color: 'inherit' }}>切替モード (Mode):</label>
+            <select
+              value={layerSwitchMode}
+              onChange={(e) => setLayerSwitchMode(e.target.value as 'toggle' | 'momentary')}
+              style={{ width: '100%', padding: '5px', fontSize: '0.95em', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#fff', color: '#000' }}
+            >
+              <option value="toggle">トグル切替 (Toggle)</option>
+              <option value="momentary">ホールド切替 (Momentary)</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: '0.8em', fontWeight: 'bold', display: 'block', marginBottom: '3px', color: 'inherit' }}>切替先レイアウト (Target):</label>
+            <select
+              value={layerSwitchTarget}
+              onChange={(e) => setLayerSwitchTarget(e.target.value)}
+              style={{ width: '100%', padding: '5px', fontSize: '0.95em', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#fff', color: '#000' }}
+            >
+              {layouts.map(layout => (
+                <option key={layout} value={layout}>{layout}</option>
+              ))}
+            </select>
+          </div>
+          <button 
+            onClick={() => onSelectValue({ type: 'layer_switch', switch_mode: layerSwitchMode, target_layout: layerSwitchTarget })}
+            className="button-primary"
+            style={{ width: '100%', padding: '6px', fontSize: '0.9em', cursor: 'pointer' }}
+          >
+            適用する (Apply)
+          </button>
+        </div>
+      )}
+
       {/* Grid of keys for selection */}
       <div className="palette-grid-section" style={{ maxHeight: '180px', overflowY: 'auto' }}>
         {keyCategories.map(cat => (
@@ -268,7 +328,7 @@ const KeyPalette: React.FC<KeyPaletteProps> = ({ currentValue, onSelectValue, st
             <div className="key-palette-grid">
               {cat.keys.map(k => (
                 <button
-                  key={k.label}
+                  key={typeof k.value === 'string' ? k.label : JSON.stringify(k.value)}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleKeyGridSelect(k.value);
@@ -416,6 +476,9 @@ const ButtonMapping: React.FC<ButtonMappingProps> = ({ deviceType, initialMappin
         displayValue = `Mod-Tap (Tap: ${value.tap || 'なし'}, Hold: ${value.hold || 'なし'})`;
       } else if (value.type === 'tap_dance') {
         displayValue = `Tap Dance (1x: ${value.single_tap || 'なし'}, 2x: ${value.double_tap || 'なし'}${value.hold ? `, Hold: ${value.hold}` : ''})`;
+      } else if (value.type === 'layer_switch') {
+        const modeStr = value.switch_mode === 'toggle' ? 'トグル' : 'ホールド';
+        displayValue = `Layer (${modeStr}: ${value.target_layout || 'なし'})`;
       }
     } else {
       displayValue = (value as string) || '';
@@ -450,6 +513,7 @@ const ButtonMapping: React.FC<ButtonMappingProps> = ({ deviceType, initialMappin
             />
             <KeyPalette 
               currentValue={value}
+              layouts={layouts}
               onSelectValue={(val) => {
                 handleInputChange(button, val);
                 setActivePaletteButton(null);
