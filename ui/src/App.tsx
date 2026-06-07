@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import { socket } from './socket';
 import Settings from './Settings';
+import JoyConSettings from './JoyConSettings';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { DeviceSettingsProvider, useDeviceSettings } from './contexts/DeviceSettingsContext';
 import type { JoyConDevice } from './types';
@@ -48,9 +49,12 @@ const MainContent: React.FC = () => {
   }, [findProfileByAppName]);
 
   return (
-    <main>
-      <div className="main-content-full">
-        <Settings joycons={joycons} activeTab={activeTab} setActiveTab={setActiveTab} />
+    <main className="app-main">
+      <div className="joycon-settings-section">
+        <JoyConSettings allJoyCons={joycons} />
+      </div>
+      <div className="other-settings-section">
+        <Settings activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>
     </main>
   );

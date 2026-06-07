@@ -389,3 +389,28 @@ body[data-theme='light'] .device-card.active {
 .joycon-card-unified {
   grid-column: 1 / -1;
 }
+
+/* App Main Layout Grid/Flex */
+.app-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.joycon-settings-section,
+.other-settings-section {
+  background-color: #3a3f4a;
+  border-radius: 8px;
+  padding: 1.5em;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+body[data-theme='light'] .joycon-settings-section,
+body[data-theme='light'] .other-settings-section {
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px solid #dcdfe6;
+}
