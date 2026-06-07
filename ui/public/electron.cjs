@@ -10,7 +10,8 @@ let windowWatcherInterval = null;
 
 async function startWindowWatcher() {
     let lastActiveApp = null;
-    const { activeWin } = await import('active-win');
+    const activeWinModule = await import('active-win');
+    const activeWin = activeWinModule.default;
 
     windowWatcherInterval = setInterval(async () => {
         try {
@@ -76,6 +77,9 @@ function createWindow() {
             nodeIntegration: false,
         },
     });
+
+    // Remove the default menu bar (File, Edit, etc.) to clean up the window interface
+    win.removeMenu();
 
     // In development, load from the Vite dev server. In production, load the built file.
     const isDev = !app.isPackaged;
