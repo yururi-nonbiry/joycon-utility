@@ -372,15 +372,121 @@ async def scan_and_manage_joycons():
                     
                     # --- キーマッピング実行 ---
                     for button in pressed:
-                        key_string = device_mapping.get(button)
-                        if key_string:
-                            key_to_press = get_key(key_string)
+                        key_config = device_mapping.get(button)
+                        if isinstance(key_config, str):
+                            key_to_press = get_key(key_config)
                             keyboard.press(key_to_press)
                     for button in released:
-                        key_string = device_mapping.get(button)
-                        if key_string:
-                            key_to_release = get_key(key_string)
+                        key_config = device_mapping.get(button)
+                        if isinstance(key_config, str):
+                            key_to_release = get_key(key_config)
                             keyboard.release(key_to_release)
+
+                    # --- 特殊キーマッピング (Mod-Tap / Tap-Dance) 処理 ---
+                    # TAPPING_TERM = 0.2  # 200ms
+                    TAPPING_TERM = 0.2
+
+                    if 'button_states' not in dev_info:
+                        dev_info['button_states'] = {}
+
+                    button_states = dev_info['button_states']
+
+                    # Loop through all mapped buttons
+                    for button_name, config in device_mapping.items():
+                        if not isinstance(config, dict):
+                            continue
+                        
+                        config_type = config.get('type')
+                        if config_type not in ('mod_tap', 'tap_dance'):
+                            continue
+
+                        if button_name not in button_states:
+                            button_states[button_name] = {
+                                'status': 'idle',
+                                'press_time': 0.0,
+                                'release_time': 0.0,
+                                'tap_count': 0,
+                                'is_physically_pressed': False
+                            }
+
+                        btn_state = button_states[button_name]
+                        was_pressed = btn_state['is_physically_pressed']
+                        is_pressed = button_name in current_buttons
+                        btn_state['is_physically_pressed'] = is_pressed
+
+                        now = time.time()
+
+                        just_pressed = is_pressed and not was_pressed
+                        just_released = not is_pressed and was_pressed
+
+                        # --- MOD-TAP LOGIC ---
+                        if config_type == 'mod_tap':
+                            tap_key = config.get('tap')
+                            hold_key = config.get('hold')
+
+                            if just_pressed:
+                                btn_state['press_time'] = now
+                                btn_state['status'] = 'pressing'
+                            
+                            elif btn_state['status'] == 'pressing':
+                                if is_pressed:
+                                    if now - btn_state['press_time'] > TAPPING_TERM:
+                                        if hold_key:
+                                            keyboard.press(get_key(hold_key))
+                                        btn_state['status'] = 'held'
+                                else:
+                                    if tap_key:
+                                        k = get_key(tap_key)
+                                        keyboard.press(k)
+                                        keyboard.release(k)
+                                    btn_state['status'] = 'idle'
+                            
+                            elif just_released and btn_state['status'] == 'held':
+                                if hold_key:
+                                    keyboard.release(get_key(hold_key))
+                                btn_state['status'] = 'idle'
+
+                        # --- TAP-DANCE LOGIC ---
+                        elif config_type == 'tap_dance':
+                            single_tap = config.get('single_tap')
+                            double_tap = config.get('double_tap')
+                            hold_key = config.get('hold')
+
+                            if just_pressed:
+                                btn_state['press_time'] = now
+                                btn_state['tap_count'] += 1
+                                btn_state['status'] = 'pressing'
+                            
+                            elif btn_state['status'] == 'pressing':
+                                if is_pressed:
+                                    if hold_key and (now - btn_state['press_time'] > TAPPING_TERM):
+                                        keyboard.press(get_key(hold_key))
+                                        btn_state['status'] = 'held'
+                                        btn_state['tap_count'] = 0
+                                else:
+                                    btn_state['release_time'] = now
+                                    btn_state['status'] = 'released'
+                            
+                            elif just_released and btn_state['status'] == 'held':
+                                if hold_key:
+                                    keyboard.release(get_key(hold_key))
+                                btn_state['status'] = 'idle'
+                            
+                            elif btn_state['status'] == 'released':
+                                if now - btn_state['release_time'] > TAPPING_TERM:
+                                    count = btn_state['tap_count']
+                                    if count == 1:
+                                        if single_tap:
+                                            k = get_key(single_tap)
+                                            keyboard.press(k)
+                                            keyboard.release(k)
+                                    elif count >= 2:
+                                        if double_tap:
+                                            k = get_key(double_tap)
+                                            keyboard.press(k)
+                                            keyboard.release(k)
+                                    btn_state['tap_count'] = 0
+                                    btn_state['status'] = 'idle'
 
                     # --- アナログスティック処理 ---
                     stick_config = device_mapping.get('stick_l' if dev_info['type'] == 'L' else 'stick_r')

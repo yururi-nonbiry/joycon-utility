@@ -11,7 +11,8 @@ interface ButtonMappingProps {
 }
 
 interface KeyPaletteProps {
-  onSelectKey: (key: string) => void;
+  currentValue: any;
+  onSelectValue: (val: any) => void;
   style?: React.CSSProperties;
 }
 
@@ -59,7 +60,20 @@ const stickModes = [
   { value: 'dial', label: 'ダイヤル' },
 ];
 
-const KeyPalette: React.FC<KeyPaletteProps> = ({ onSelectKey, style }) => {
+const KeyPalette: React.FC<KeyPaletteProps> = ({ currentValue, onSelectValue, style }) => {
+  const [activeTab, setActiveTab] = useState<'normal' | 'mod_tap' | 'tap_dance'>('normal');
+
+  // Mod-Tap fields
+  const [modTapTap, setModTapTap] = useState('');
+  const [modTapHold, setModTapHold] = useState('');
+  const [modTapActiveField, setModTapActiveField] = useState<'tap' | 'hold'>('tap');
+
+  // Tap Dance fields
+  const [tapDanceSingle, setTapDanceSingle] = useState('');
+  const [tapDanceDouble, setTapDanceDouble] = useState('');
+  const [tapDanceHold, setTapDanceHold] = useState('');
+  const [tapDanceActiveField, setTapDanceActiveField] = useState<'single' | 'double' | 'hold'>('single');
+
   const keyCategories = [
     {
       category: 'よく使うキー',
@@ -105,27 +119,169 @@ const KeyPalette: React.FC<KeyPaletteProps> = ({ onSelectKey, style }) => {
     }
   ];
 
+  useEffect(() => {
+    if (typeof currentValue === 'object' && currentValue !== null) {
+      if (currentValue.type === 'mod_tap') {
+        setActiveTab('mod_tap');
+        setModTapTap(currentValue.tap || '');
+        setModTapHold(currentValue.hold || '');
+      } else if (currentValue.type === 'tap_dance') {
+        setActiveTab('tap_dance');
+        setTapDanceSingle(currentValue.single_tap || '');
+        setTapDanceDouble(currentValue.double_tap || '');
+        setTapDanceHold(currentValue.hold || '');
+      }
+    } else {
+      setActiveTab('normal');
+      setModTapTap('');
+      setModTapHold('');
+      setTapDanceSingle('');
+      setTapDanceDouble('');
+      setTapDanceHold('');
+    }
+  }, [currentValue]);
+
+  const handleKeyGridSelect = (key: string) => {
+    if (activeTab === 'normal') {
+      onSelectValue(key);
+    } else if (activeTab === 'mod_tap') {
+      if (modTapActiveField === 'tap') {
+        setModTapTap(key);
+      } else {
+        setModTapHold(key);
+      }
+    } else if (activeTab === 'tap_dance') {
+      if (tapDanceActiveField === 'single') {
+        setTapDanceSingle(key);
+      } else if (tapDanceActiveField === 'double') {
+        setTapDanceDouble(key);
+      } else {
+        setTapDanceHold(key);
+      }
+    }
+  };
+
   return (
     <div className="key-palette" style={style}>
-      {keyCategories.map(cat => (
-        <div key={cat.category} style={{ marginBottom: '10px' }}>
-          <div className="key-palette-category">{cat.category}</div>
-          <div className="key-palette-grid">
-            {cat.keys.map(k => (
-              <button
-                key={k.label}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelectKey(k.value);
-                }}
-                className="key-palette-btn"
-              >
-                {k.label}
-              </button>
-            ))}
+      <div className="palette-tabs" style={{ display: 'flex', borderBottom: '1px solid #ddd', marginBottom: '10px' }}>
+        <button 
+          onClick={() => setActiveTab('normal')} 
+          className={`palette-tab ${activeTab === 'normal' ? 'active' : ''}`}
+          style={{ flex: 1, padding: '6px', fontSize: '0.85em', border: 'none', background: 'none', cursor: 'pointer', borderBottom: activeTab === 'normal' ? '2px solid #007bff' : '2px solid transparent', fontWeight: activeTab === 'normal' ? 'bold' : 'normal', color: 'inherit' }}
+        >通常</button>
+        <button 
+          onClick={() => setActiveTab('mod_tap')} 
+          className={`palette-tab ${activeTab === 'mod_tap' ? 'active' : ''}`}
+          style={{ flex: 1, padding: '6px', fontSize: '0.85em', border: 'none', background: 'none', cursor: 'pointer', borderBottom: activeTab === 'mod_tap' ? '2px solid #007bff' : '2px solid transparent', fontWeight: activeTab === 'mod_tap' ? 'bold' : 'normal', color: 'inherit' }}
+        >Mod-Tap</button>
+        <button 
+          onClick={() => setActiveTab('tap_dance')} 
+          className={`palette-tab ${activeTab === 'tap_dance' ? 'active' : ''}`}
+          style={{ flex: 1, padding: '6px', fontSize: '0.85em', border: 'none', background: 'none', cursor: 'pointer', borderBottom: activeTab === 'tap_dance' ? '2px solid #007bff' : '2px solid transparent', fontWeight: activeTab === 'tap_dance' ? 'bold' : 'normal', color: 'inherit' }}
+        >Tap Dance</button>
+      </div>
+
+      {activeTab === 'mod_tap' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid #ddd' }}>
+          <div>
+            <label style={{ fontSize: '0.8em', fontWeight: 'bold', display: 'block', marginBottom: '3px', color: 'inherit' }}>タップ時 (Tap):</label>
+            <input 
+              type="text" 
+              value={modTapTap} 
+              onFocus={() => setModTapActiveField('tap')}
+              onChange={(e) => setModTapTap(e.target.value)}
+              placeholder="例: space, z"
+              style={{ width: '100%', padding: '5px', fontSize: '0.9em', border: modTapActiveField === 'tap' ? '2px solid #007bff' : '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', color: '#000' }}
+            />
           </div>
+          <div>
+            <label style={{ fontSize: '0.8em', fontWeight: 'bold', display: 'block', marginBottom: '3px', color: 'inherit' }}>ホールド時 (Hold):</label>
+            <input 
+              type="text" 
+              value={modTapHold} 
+              onFocus={() => setModTapActiveField('hold')}
+              onChange={(e) => setModTapHold(e.target.value)}
+              placeholder="例: ctrl, shift"
+              style={{ width: '100%', padding: '5px', fontSize: '0.9em', border: modTapActiveField === 'hold' ? '2px solid #007bff' : '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', color: '#000' }}
+            />
+          </div>
+          <button 
+            onClick={() => onSelectValue({ type: 'mod_tap', tap: modTapTap.trim(), hold: modTapHold.trim() })}
+            className="button-primary"
+            style={{ width: '100%', padding: '6px', fontSize: '0.9em', cursor: 'pointer' }}
+          >
+            適用する (Apply)
+          </button>
         </div>
-      ))}
+      )}
+
+      {activeTab === 'tap_dance' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid #ddd' }}>
+          <div>
+            <label style={{ fontSize: '0.8em', fontWeight: 'bold', display: 'block', marginBottom: '3px', color: 'inherit' }}>1回タップ (Single Tap):</label>
+            <input 
+              type="text" 
+              value={tapDanceSingle} 
+              onFocus={() => setTapDanceActiveField('single')}
+              onChange={(e) => setTapDanceSingle(e.target.value)}
+              placeholder="例: z"
+              style={{ width: '100%', padding: '5px', fontSize: '0.9em', border: tapDanceActiveField === 'single' ? '2px solid #007bff' : '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', color: '#000' }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: '0.8em', fontWeight: 'bold', display: 'block', marginBottom: '3px', color: 'inherit' }}>2回タップ (Double Tap):</label>
+            <input 
+              type="text" 
+              value={tapDanceDouble} 
+              onFocus={() => setTapDanceActiveField('double')}
+              onChange={(e) => setTapDanceDouble(e.target.value)}
+              placeholder="例: x"
+              style={{ width: '100%', padding: '5px', fontSize: '0.9em', border: tapDanceActiveField === 'double' ? '2px solid #007bff' : '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', color: '#000' }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: '0.8em', fontWeight: 'bold', display: 'block', marginBottom: '3px', color: 'inherit' }}>ホールド (Hold - オプション):</label>
+            <input 
+              type="text" 
+              value={tapDanceHold} 
+              onFocus={() => setTapDanceActiveField('hold')}
+              onChange={(e) => setTapDanceHold(e.target.value)}
+              placeholder="例: ctrl"
+              style={{ width: '100%', padding: '5px', fontSize: '0.9em', border: tapDanceActiveField === 'hold' ? '2px solid #007bff' : '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', color: '#000' }}
+            />
+          </div>
+          <button 
+            onClick={() => onSelectValue({ type: 'tap_dance', single_tap: tapDanceSingle.trim(), double_tap: tapDanceDouble.trim(), hold: tapDanceHold.trim() })}
+            className="button-primary"
+            style={{ width: '100%', padding: '6px', fontSize: '0.9em', cursor: 'pointer' }}
+          >
+            適用する (Apply)
+          </button>
+        </div>
+      )}
+
+      {/* Grid of keys for selection */}
+      <div className="palette-grid-section" style={{ maxHeight: '180px', overflowY: 'auto' }}>
+        {keyCategories.map(cat => (
+          <div key={cat.category} style={{ marginBottom: '10px' }}>
+            <div className="key-palette-category">{cat.category}</div>
+            <div className="key-palette-grid">
+              {cat.keys.map(k => (
+                <button
+                  key={k.label}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleKeyGridSelect(k.value);
+                  }}
+                  className="key-palette-btn"
+                >
+                  {k.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -179,7 +335,7 @@ const ButtonMapping: React.FC<ButtonMappingProps> = ({ deviceType, initialMappin
     setMapping(initialMapping);
   }, [initialMapping]);
 
-  const handleInputChange = (button: string, value: string) => {
+  const handleInputChange = (button: string, value: any) => {
     const newMapping = { ...mapping };
     const isStick = button === 'stick_l' || button === 'stick_r';
 
@@ -254,16 +410,28 @@ const ButtonMapping: React.FC<ButtonMappingProps> = ({ deviceType, initialMappin
       );
     }
 
+    let displayValue = '';
+    if (typeof value === 'object' && value !== null) {
+      if (value.type === 'mod_tap') {
+        displayValue = `Mod-Tap (Tap: ${value.tap || 'なし'}, Hold: ${value.hold || 'なし'})`;
+      } else if (value.type === 'tap_dance') {
+        displayValue = `Tap Dance (1x: ${value.single_tap || 'なし'}, 2x: ${value.double_tap || 'なし'}${value.hold ? `, Hold: ${value.hold}` : ''})`;
+      }
+    } else {
+      displayValue = (value as string) || '';
+    }
+
     return (
       <div className="input-with-palette-container" style={{ position: 'relative', flexGrow: 1, display: 'flex' }}>
         <input
           id={`map-${button}`}
           type="text"
-          value={(value as string) || ''}
-          onChange={(e) => handleInputChange(button, e.target.value)}
+          value={displayValue}
+          readOnly={typeof value === 'object' && value !== null}
           onFocus={() => setActivePaletteButton(button)}
+          onChange={(e) => handleInputChange(button, e.target.value)}
           placeholder="例: a, ctrl_l, space"
-          style={{ width: '100%', boxSizing: 'border-box' }}
+          style={{ width: '100%', boxSizing: 'border-box', fontWeight: typeof value === 'object' ? 'bold' : 'normal' }}
         />
         {activePaletteButton === button && (
           <>
@@ -281,8 +449,9 @@ const ButtonMapping: React.FC<ButtonMappingProps> = ({ deviceType, initialMappin
               }}
             />
             <KeyPalette 
-              onSelectKey={(key) => {
-                handleInputChange(button, key);
+              currentValue={value}
+              onSelectValue={(val) => {
+                handleInputChange(button, val);
                 setActivePaletteButton(null);
               }}
               style={{
