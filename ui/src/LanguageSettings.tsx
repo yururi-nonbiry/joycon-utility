@@ -5,7 +5,9 @@ const LanguageSettings = () => {
   const { i18n } = useTranslation();
 
   const handleLanguageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    i18n.changeLanguage(event.target.value);
+    const newLang = event.target.value;
+    i18n.changeLanguage(newLang);
+    localStorage.setItem('language', newLang);
   };
 
   return (

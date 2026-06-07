@@ -6,6 +6,7 @@ i18n
   .use(HttpApi) // Loads translations from a server
   .use(initReactI18next) // Passes i18n down to react-i18next
   .init({
+    lng: localStorage.getItem('language') || 'en',
     supportedLngs: ['en', 'ja'],
     fallbackLng: 'en', // Use English if the detected language is not available
     debug: true, // Set to false in production
