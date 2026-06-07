@@ -192,6 +192,7 @@ const JoyConSettings: React.FC<JoyConSettingsProps> = ({ allJoyCons }) => {
             onMappingChange={(newMap) => handleMappingChange('L', newMap)}
             pressedButtons={joyConL?.buttons || {}}
             onOpenStickSettings={(stickKey) => handleOpenStickSettings('L', stickKey as 'stick_l' | 'stick_r')}
+            layouts={layouts}
           />
         </div>
         <div className="joycon-view">
@@ -213,6 +214,7 @@ const JoyConSettings: React.FC<JoyConSettingsProps> = ({ allJoyCons }) => {
             onMappingChange={(newMap) => handleMappingChange('R', newMap)}
             pressedButtons={joyConR?.buttons || {}}
             onOpenStickSettings={(stickKey) => handleOpenStickSettings('R', stickKey as 'stick_l' | 'stick_r')}
+            layouts={layouts}
           />
         </div>
       </div>

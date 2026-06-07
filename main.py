@@ -488,6 +488,46 @@ async def scan_and_manage_joycons():
                                     btn_state['tap_count'] = 0
                                     btn_state['status'] = 'idle'
 
+                    # --- レイヤー切り替え (Layer Switch) 処理 ---
+                    if 'active_momentary_buttons' not in dev_info:
+                        dev_info['active_momentary_buttons'] = {}
+
+                    released_momentaries = []
+                    for mb_name in list(dev_info['active_momentary_buttons'].keys()):
+                        if mb_name not in current_buttons:
+                            released_momentaries.append(mb_name)
+
+                    for mb_name in released_momentaries:
+                        return_layout = dev_info['active_momentary_buttons'].pop(mb_name)
+                        if not dev_info['active_momentary_buttons']:
+                            if return_layout in state.layouts:
+                                state.active_layout = return_layout
+                                state.joycon_mapping = state.layouts[return_layout]
+                                save_mapping()
+                                await send_layouts_update()
+                                await sio.emit('layout_switched', {'layoutName': return_layout})
+
+                    for button_name in pressed:
+                        config = device_mapping.get(button_name)
+                        if isinstance(config, dict) and config.get('type') == 'layer_switch':
+                            switch_mode = config.get('switch_mode')
+                            target_layout = config.get('target_layout')
+                            
+                            if target_layout in state.layouts:
+                                if switch_mode == 'toggle':
+                                    state.active_layout = target_layout
+                                    state.joycon_mapping = state.layouts[target_layout]
+                                    save_mapping()
+                                    await send_layouts_update()
+                                    await sio.emit('layout_switched', {'layoutName': target_layout})
+                                elif switch_mode == 'momentary':
+                                    dev_info['active_momentary_buttons'][button_name] = state.active_layout
+                                    state.active_layout = target_layout
+                                    state.joycon_mapping = state.layouts[target_layout]
+                                    save_mapping()
+                                    await send_layouts_update()
+                                    await sio.emit('layout_switched', {'layoutName': target_layout})
+
                     # --- アナログスティック処理 ---
                     stick_config = device_mapping.get('stick_l' if dev_info['type'] == 'L' else 'stick_r')
                     
