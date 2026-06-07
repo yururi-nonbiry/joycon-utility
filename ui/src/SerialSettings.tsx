@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { socket } from './socket';
 
@@ -16,14 +16,14 @@ const SerialSettings = () => {
   useEffect(() => {
     refreshPorts();
 
-    socket.on('serial-ports-list', (portList) => {
+    socket.on('serial-ports-list', (portList: string[]) => {
       setPorts(portList);
       if (portList.length > 0 && !selectedPort) {
         setSelectedPort(portList[0]);
       }
     });
 
-    socket.on('serial-connection-status', ({ status, port }) => {
+    socket.on('serial-connection-status', ({ status, port }: { status: boolean; port?: string }) => {
       setIsConnected(status);
       setConnectedPort(port || '');
     });

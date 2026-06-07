@@ -1,7 +1,14 @@
 // スティック設定の型定義
 export interface StickConfig {
-  mode: 'none' | 'mouse';
+  mode: 'none' | 'mouse' | '8way' | 'dial';
   sensitivity?: number;
+  mappings?: { [dir: string]: string };
+  dials?: {
+    [dir: string]: {
+      increase?: string;
+      decrease?: string;
+    };
+  };
 }
 
 // マッピング全体の型定義

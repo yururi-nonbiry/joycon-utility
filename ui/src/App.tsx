@@ -13,17 +13,17 @@ const MainContent: React.FC = () => {
 
   useEffect(() => {
     // Joy-Conデバイスリストの受信
-    socket.on('joycon_devices', (data) => {
+    socket.on('joycon_devices', (data: { devices?: JoyConDevice[] }) => {
       setJoycons(data.devices || []);
     });
 
     // Joy-Conの状態更新
-    socket.on('joycon_update', (data) => {
+    socket.on('joycon_update', (data: { id: string; type: string; level?: number; buttons?: { [key: string]: boolean } }) => {
       setJoycons(prevJoycons => 
         prevJoycons.map(jc => {
           if (jc.id === data.id) {
             if (data.type === 'battery') {
-              return { ...jc, battery: data.level };
+              return { ...jc, battery: data.level || 0 };
             } else if (data.type === 'input') {
               return { ...jc, buttons: data.buttons }; // ボタン状態を直接保持
             }

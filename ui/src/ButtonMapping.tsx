@@ -102,7 +102,7 @@ const ButtonMapping: React.FC<ButtonMappingProps> = ({ deviceType, initialMappin
     const isStick = button === 'stick_l' || button === 'stick_r';
 
     if (isStick) {
-      const currentConfig = typeof newMapping[button] === 'object' ? newMapping[button] as StickConfig : { mode: 'none' };
+      const currentConfig = typeof newMapping[button] === 'object' ? newMapping[button] as StickConfig : { mode: 'none' } as StickConfig;
       const newMode = value as StickConfig['mode'];
 
       if (newMode === 'mouse') {
@@ -139,7 +139,7 @@ const ButtonMapping: React.FC<ButtonMappingProps> = ({ deviceType, initialMappin
 
     if (isStick) {
       // valueが文字列の場合（古いデータ形式）、オブジェクトに変換
-      const config: StickConfig = typeof value === 'object' ? value as StickConfig : { mode: value || 'none' };
+      const config: StickConfig = typeof value === 'object' ? value as StickConfig : { mode: (value || 'none') as StickConfig['mode'] };
       
       return (
         <div className="stick-control">
