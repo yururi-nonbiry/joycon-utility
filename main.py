@@ -93,6 +93,8 @@ class AppState:
         self.joycon_devices = []
         self.global_packet_counter = 0
         self.joycon_mapping = {}
+        self.layouts = {"Default": {}}
+        self.active_layout = "Default"
 
 state = AppState()
 
@@ -105,21 +107,104 @@ socket_app = socketio.ASGIApp(sio, other_asgi_app=app)
 def load_mapping():
     try:
         with open(MAPPING_FILE, 'r') as f:
-            state.joycon_mapping = json.load(f)
+            data = json.load(f)
+            if isinstance(data, dict) and "layouts" in data and "active_layout" in data:
+                state.layouts = data["layouts"]
+                state.active_layout = data["active_layout"]
+            else:
+                # Old format: mapping dict directly
+                state.layouts = {"Default": data}
+                state.active_layout = "Default"
+            
+            if "Default" not in state.layouts:
+                state.layouts["Default"] = {}
+                
+            state.joycon_mapping = state.layouts.get(state.active_layout, state.layouts["Default"])
             print(f"Loaded mapping from {MAPPING_FILE}")
     except (FileNotFoundError, json.JSONDecodeError):
-        state.joycon_mapping = {}
+        state.layouts = {"Default": {}}
+        state.active_layout = "Default"
+        state.joycon_mapping = state.layouts["Default"]
 
 def save_mapping():
+    data = {
+        "active_layout": state.active_layout,
+        "layouts": state.layouts
+    }
     with open(MAPPING_FILE, 'w') as f:
-        json.dump(state.joycon_mapping, f, indent=2)
+        json.dump(data, f, indent=2)
     print(f"Saved mapping to {MAPPING_FILE}")
 
-# --- Socket.IO イベントハンドラ ---
+# --- Socket.IO ユーティリティ & イベントハンドラ ---
+async def send_layouts_update(sid=None):
+    data = {
+        "layouts": list(state.layouts.keys()),
+        "activeLayout": state.active_layout
+    }
+    if sid:
+        await sio.emit('layouts_update', data, to=sid)
+    else:
+        await sio.emit('layouts_update', data)
+
 @sio.event
 async def connect(sid, environ):
     print(f"Socket.IO client connected: {sid}")
     await send_joycon_devices_update()
+    await send_layouts_update(sid)
+
+@sio.on('get_layouts')
+async def get_layouts(sid, data=None):
+    await send_layouts_update(sid)
+
+@sio.on('switch_layout')
+async def switch_layout(sid, data):
+    layout_name = data.get('layoutName')
+    if layout_name in state.layouts:
+        state.active_layout = layout_name
+        state.joycon_mapping = state.layouts[layout_name]
+        save_mapping()
+        await send_layouts_update()
+        await sio.emit('layout_switched', {'layoutName': layout_name})
+    else:
+        await sio.emit('layout_error', {'message': f'Layout {layout_name} not found'}, to=sid)
+
+@sio.on('create_layout')
+async def create_layout(sid, data):
+    layout_name = data.get('layoutName')
+    if not layout_name:
+        return
+    layout_name = layout_name.strip()
+    if not layout_name:
+        return
+    if layout_name in state.layouts:
+        await sio.emit('layout_error', {'message': f'Layout "{layout_name}" already exists'}, to=sid)
+        return
+    
+    # Copy mappings from current active layout
+    current_mappings = state.layouts.get(state.active_layout, {})
+    state.layouts[layout_name] = json.loads(json.dumps(current_mappings))
+    state.active_layout = layout_name
+    state.joycon_mapping = state.layouts[layout_name]
+    save_mapping()
+    await send_layouts_update()
+    await sio.emit('layout_switched', {'layoutName': layout_name})
+
+@sio.on('delete_layout')
+async def delete_layout(sid, data):
+    layout_name = data.get('layoutName')
+    if not layout_name or layout_name == "Default":
+        await sio.emit('layout_error', {'message': 'Cannot delete Default layout'}, to=sid)
+        return
+    if layout_name in state.layouts:
+        del state.layouts[layout_name]
+        if state.active_layout == layout_name:
+            state.active_layout = "Default"
+            state.joycon_mapping = state.layouts["Default"]
+        save_mapping()
+        await send_layouts_update()
+        await sio.emit('layout_switched', {'layoutName': state.active_layout})
+    else:
+        await sio.emit('layout_error', {'message': f'Layout {layout_name} not found'}, to=sid)
 
 @sio.on('load_joycon_mapping')
 async def load_joycon_mapping(sid, data):
@@ -136,11 +221,15 @@ async def save_joycon_mapping(sid, data):
     device_id = data.get('deviceId')
     mapping = data.get('mapping')
     if device_id and mapping is not None:
-        state.joycon_mapping[device_id] = mapping
+        active_layout = state.active_layout
+        if active_layout not in state.layouts:
+            state.layouts[active_layout] = {}
+        state.layouts[active_layout][device_id] = mapping
         if device_id not in ('L', 'R'):
             dev = next((d for d in state.joycon_devices if d['path'] == device_id), None)
             if dev:
-                state.joycon_mapping[dev['type']] = mapping
+                state.layouts[active_layout][dev['type']] = mapping
+        state.joycon_mapping = state.layouts[active_layout]
         save_mapping()
         await sio.emit('joycon_mapping_saved', {'status': 'success'}, to=sid)
 

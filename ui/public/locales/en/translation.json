@@ -39,5 +39,16 @@
   "deviceGrid": "Device Grid",
   "waitingForData": "Waiting for data from a device, or all devices are hidden in settings.",
   "deviceHeader": "Device",
-  "portHeader": "Port"
+  "portHeader": "Port",
+  "joyconSettings": "Joy-Con Settings",
+  "layout": "Layout",
+  "newLayout": "New Layout",
+  "delete": "Delete",
+  "createLayout": "Create New Layout",
+  "layoutName": "Layout Name",
+  "cancel": "Cancel",
+  "create": "Create",
+  "confirmDeleteLayout": "Are you sure you want to delete the layout \"{{name}}\"?",
+  "saveMappings": "Save Mappings",
+  "settingsSaved": "Settings saved!"
 }

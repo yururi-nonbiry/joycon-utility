@@ -39,5 +39,16 @@
   "deviceGrid": "デバイスグリッド",
   "waitingForData": "デバイスからのデータを待っています、またはすべてのデバイスが設定で非表示にされています。",
   "deviceHeader": "デバイス",
-  "portHeader": "ポート"
+  "portHeader": "ポート",
+  "joyconSettings": "Joy-Con設定",
+  "layout": "レイアウト",
+  "newLayout": "新規レイアウト",
+  "delete": "削除",
+  "createLayout": "新規レイアウト作成",
+  "layoutName": "レイアウト名",
+  "cancel": "キャンセル",
+  "create": "作成",
+  "confirmDeleteLayout": "レイアウト「{{name}}」を削除してもよろしいですか？",
+  "saveMappings": "マッピングを保存",
+  "settingsSaved": "設定を保存しました！"
 }
