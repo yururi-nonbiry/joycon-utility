@@ -394,22 +394,74 @@ body[data-theme='light'] .device-card.active {
 .app-main {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-.joycon-settings-section,
-.other-settings-section {
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #444;
+}
+
+body[data-theme='light'] .app-header {
+  border-bottom-color: #dcdfe6;
+}
+
+.app-header h1 {
+  font-size: 1.6rem;
+  margin: 0;
+  color: #61dafb;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+body[data-theme='light'] .app-header h1 {
+  color: #007bff;
+}
+
+.settings-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-icon-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #61dafb;
+  transform: rotate(45deg) scale(1.05);
+}
+
+body[data-theme='light'] .settings-icon-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #007bff;
+}
+
+.gear-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.joycon-settings-section {
   background-color: #3a3f4a;
   border-radius: 8px;
   padding: 1.5em;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-body[data-theme='light'] .joycon-settings-section,
-body[data-theme='light'] .other-settings-section {
+body[data-theme='light'] .joycon-settings-section {
   background-color: #ffffff;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   border: 1px solid #dcdfe6;

@@ -1,0 +1,37 @@
+.settings-modal-content {
+  background-color: #282c34; /* default dark theme background */
+  color: white;
+  padding: 25px;
+  border-radius: 12px;
+  min-width: 600px;
+  max-width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  position: relative;
+  border: 1px solid #444;
+}
+
+body[data-theme='light'] .settings-modal-content {
+  background-color: #ffffff;
+  color: #1c1e21;
+  border-color: #dcdfe6;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.settings-modal-close-icon {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #888;
+  transition: color 0.2s ease;
+  z-index: 10;
+}
+
+.settings-modal-close-icon:hover {
+  color: #ff5c46;
+}
